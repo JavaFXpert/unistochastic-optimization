@@ -66,7 +66,12 @@ Vue.component('demo-grid', {
 
 // function to create array of 180 degree angles
 function create180AnglesArray() {
-  return Array(rotationDegOfFreedom).fill(180);
+  var anglesArray = Array(rotationDegOfFreedom).fill(180);
+  for (var i = 0; i < rotationDegOfFreedom; i++) {
+    anglesArray[i] = degreesToRadians(anglesArray[i]);
+  }
+  //console.log("anglesArray: " + anglesArray)
+  return anglesArray;
 }
 
 // function to create array from the rotationangles array
@@ -134,13 +139,19 @@ function computeStochasticMatrix(arrayOfAngles, unistochastic) {
   return retVal;
 }
 
-// function to convert a vector containing degrees to radians
+// function to convert degrees to radians
 function degreesToRadians(angleInDegrees) {
   var radians = angleInDegrees * (math.pi / 180);
   return radians;
 }
 
-//Nelder-Mead optimization code -----------------
+// function to convert radians to degrees
+function radiansToDegrees(angleInRadians) {
+  var degrees = angleInRadians / (math.pi / 180);
+  return degrees;
+}
+
+// Optimization code -----------------
 // C4  D4  E4  F4  G4  A4  B4  C5
 var desiredHarmonyMatrix = math.matrix(
   [[.00, .00, .25, .25, .25, .25, .00, .00], //C4
@@ -162,22 +173,26 @@ function euclidean(computedMatrix, desiredMatrix) {
     sumOfSquares += differenceArraySquared[i];
   }
   this.rv.euclideandistance = math.sqrt(sumOfSquares);
-  //console.log("euclideandistance: " + this.rv.euclideandistance);
+  console.log("euclideandistance: " + this.rv.euclideandistance);
   return this.rv.euclideandistance;
 }
 
 function loss(arrayOfAngles) {
   var rotMatrix = computeStochasticMatrix(arrayOfAngles, true);
-  //TODO: Find a better way so that we don't use this flag
-  if (!showuni) {
-    rotMatrix = math.square(rotMatrix);
-  }
 
   // Get Euclidean distance between computed and desired matrices
   var euclidDist = euclidean(rotMatrix, desiredHarmonyMatrix);
+  console.log("euclidDist: " + euclidDist);
   return euclidDist;
 }
-// end of Nelder-Mead optimization code -----------
+
+function optimizeRotationAngles(lossFunction, arrayOfArguments) {
+  var distance = lossFunction(arrayOfArguments);
+  console.log("distance: " + distance);
+  return arrayOfArguments;
+}
+
+// end of optimization code -----------
 
 // bootstrap the demo
 var demo = new Vue({
@@ -201,8 +216,13 @@ var demo = new Vue({
       rotationangles [0].value = 359 - rotationangles [0].value;
     },
     optimizerotationangles: function() {
-      var solution = fmin.nelderMead(loss, create180AnglesArray());
-      console.log("solution is at " + solution.x);
+      var solutionInRad = optimizeRotationAngles(loss, create180AnglesArray());
+      var solutionInDeg = Array(rotationDegOfFreedom).fill(0);
+      for (var i = 0; i < rotationDegOfFreedom; i++) {
+        solutionInDeg[i] = radiansToDegrees(solutionInRad[i]);
+        rotationangles[i].value = solutionInDeg[i];
+      }
+      console.log("solution is: " + solutionInDeg);
     },
   }
 })
