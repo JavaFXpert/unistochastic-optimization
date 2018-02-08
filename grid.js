@@ -282,6 +282,13 @@ var demo = new Vue({
       for (var i = 0; i < rotationDegOfFreedom; i++) {
         rotationangles[i].value = angles180DegreeArray[i];
       }
+
+      /*
+      for (var i = 0; i < rotationDegOfFreedom; i++) {
+        rotationangles[i].value = math.random(0.0, 360);
+      }
+      */
+
       var solutionInRad = optimizeRotationAngles(loss);
       var solutionInDeg = Array(rotationDegOfFreedom).fill(0);
       for (var i = 0; i < rotationDegOfFreedom; i++) {
