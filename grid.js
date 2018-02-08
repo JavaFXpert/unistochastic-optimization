@@ -200,8 +200,11 @@ function optimizeRotationAngles(lossFunction) {
   var arrayOfAnglesRad = Array(rotationDegOfFreedom).fill(0);
   var numEpochs = 5; // number of iterations over the rotational angles
   var minDistance = Number.POSITIVE_INFINITY;
-  var unitDirection = 1; //Will be either 1 or -1, signifying direction of movement
-  var moveRadians = degreesToRadians(.1);
+
+  //For each degree of freedom this will be either 1 or -1, signifying direction of movement
+  var unitDirectionArray = Array(rotationDegOfFreedom).fill(1);
+
+  var moveRadians = degreesToRadians(1.00);
   var midpointAngleRad = degreesToRadians(180);
 
   for (var i = 0; i < rotationDegOfFreedom; i++) {
@@ -217,19 +220,19 @@ function optimizeRotationAngles(lossFunction) {
       //console.log("  curAngRad: " + curAngRad);
       // Decide whether to move right or left
       if (curAngRad > midpointAngleRad) {
-        unitDirection = -1;
+        unitDirectionArray[dofIdx] = -1;
       }
-      curAngRad += unitDirection * moveRadians;
+      curAngRad += unitDirectionArray[dofIdx] * moveRadians;
       if (curAngRad >= 0.0 && curAngRad < degreesToRadians(360)) {
         arrayOfAnglesRad[dofIdx] = curAngRad;
         var tempDistance = lossFunction(arrayOfAnglesRad);
         if (tempDistance > minDistance) {
           // Moving in the wrong direction
-          unitDirection *= -1;
+          unitDirectionArray[dofIdx] *= -1;
         }
-        while (tempDistance < minDistance && curAngRad >= 0.0 && curAngRad < degreesToRadians(360)) {
+        while (tempDistance < minDistance && curAngRad >= moveRadians && curAngRad < degreesToRadians(360 - moveRadians)) {
           minDistance = tempDistance;
-          curAngRad += moveRadians * unitDirection;
+          curAngRad += moveRadians * unitDirectionArray[dofIdx];
           arrayOfAnglesRad[dofIdx] = curAngRad;
           tempDistance = lossFunction(arrayOfAnglesRad);
         }
