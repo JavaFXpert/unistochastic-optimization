@@ -33,8 +33,13 @@ var rotationangles  = [
 // Determines whether to show the unistochastic (squared) matrix
 var showuni = false;
 
-// Euclidean distance between desired stochastic matrix and calculated unistochastic matrix
-var objwrapper = {euclideandistance: 23};
+// Object wrapper for reactive variables.
+// TODO: Ascertain how to not have to use a wrapper to make reactive variables stay in sync with
+//       the Vue data.
+var rv = {
+  // Euclidean distance between desired stochastic matrix and calculated unistochastic matrix
+  euclideandistance: 23
+};
 
 // constant for number of degrees of freedom in 8 dimensional rotations
 var rotationDegOfFreedom = 28;
@@ -115,13 +120,18 @@ function computeStochasticMatrix(arrayOfAngles) {
                                                         math.multiply(math.transpose(math.matrix([[1, 0, 0, 0, 0, 0, 0, 0], [0, 1, 0, 0, 0, 0, 0, 0], [0, 0, 1, 0, 0, 0, 0, 0], [0, 0, 0, 1, 0, 0, 0, 0], [0, 0, 0, 0, 1, 0, 0, 0], [0, 0, 0, 0, 0, math.cos(a[26]), 0, -math.sin(a[26])], [0, 0, 0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 0, math.sin(a[26]), 0, math.cos(a[26])]])),
                                                           math.multiply(math.transpose(math.matrix([[1, 0, 0, 0, 0, 0, 0, 0], [0, 1, 0, 0, 0, 0, 0, 0], [0, 0, 1, 0, 0, 0, 0, 0], [0, 0, 0, 1, 0, 0, 0, 0], [0, 0, 0, 0, 1, 0, 0, 0], [0, 0, 0, 0, 0, 1, 0, 0], [0, 0, 0, 0, 0, 0, math.cos(a[27]), -math.sin(a[27])], [0, 0, 0, 0, 0, 0, math.sin(a[27]), math.cos(a[27])]])),
                                                             matrix))))))))))))))))))))))))))));
+
+  var rotatedMatrixSquared = math.square(rotatedMatrix);
+
+  // Calculate how closely this matrix fits the desired stochastic matrix
+  euclidean(rotatedMatrixSquared, desiredHarmonyMatrix);
+
+  var retVal = rotatedMatrix;
   if (showuni) {
-    rotatedMatrix = math.square(rotatedMatrix);
+    retVal = rotatedMatrixSquared;
   }
 
-  //TODO: Remove
-  euclidean(rotatedMatrix, desiredHarmonyMatrix);
-  return rotatedMatrix;
+  return retVal;
 }
 
 // function to convert a vector containing degrees to radians
@@ -151,10 +161,9 @@ function euclidean(computedMatrix, desiredMatrix) {
   for (var i = 0; i < differenceArraySquared.length; i++) {
     sumOfSquares += differenceArraySquared[i];
   }
-  euclDist = math.sqrt(sumOfSquares);
-  this.objwrapper.euclideandistance = euclDist;
-  console.log("euclideandistance: " + this.objwrapper.euclideandistance);
-  return euclDist;
+  this.rv.euclideandistance = math.sqrt(sumOfSquares);
+  //console.log("euclideandistance: " + this.rv.euclideandistance);
+  return this.rv.euclideandistance;
 }
 
 function loss(arrayOfAngles) {
@@ -179,7 +188,7 @@ var demo = new Vue({
     gridColNames: ["C'", "D'", "E'", "F'", "G'", "A'", "B'", "X'"],
     rotationangles : rotationangles,
     showuni: showuni,
-    objwrapper: objwrapper
+    rv: rv
   },
   methods: {
     toggleuni: function () {
