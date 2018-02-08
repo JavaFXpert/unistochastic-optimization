@@ -64,16 +64,6 @@ Vue.component('demo-grid', {
   }
 })
 
-// function to create array of 180 degree angles
-function create180AnglesArray() {
-  var anglesArray = Array(rotationDegOfFreedom).fill(180);
-  for (var i = 0; i < rotationDegOfFreedom; i++) {
-    anglesArray[i] = degreesToRadians(anglesArray[i]);
-  }
-  //console.log("anglesArray: " + anglesArray)
-  return anglesArray;
-}
-
 // function to create array from the rotationangles array
 function createAnglesArrayFromRotationAngles() {
   var anglesArray = Array(rotationDegOfFreedom).fill(0);
@@ -198,13 +188,13 @@ function loss(arrayOfAngles) {
  */
 function optimizeRotationAngles(lossFunction) {
   var arrayOfAnglesRad = Array(rotationDegOfFreedom).fill(0);
-  var numEpochs = 5; // number of iterations over the rotational angles
+  var numEpochs = 40; // number of iterations over the rotational angles
   var minDistance = Number.POSITIVE_INFINITY;
 
   //For each degree of freedom this will be either 1 or -1, signifying direction of movement
   var unitDirectionArray = Array(rotationDegOfFreedom).fill(1);
 
-  var moveRadians = degreesToRadians(1.00);
+  var moveRadians = degreesToRadians(0.10);
   var midpointAngleRad = degreesToRadians(180);
 
   for (var i = 0; i < rotationDegOfFreedom; i++) {
@@ -219,26 +209,43 @@ function optimizeRotationAngles(lossFunction) {
       var curAngRad = arrayOfAnglesRad[dofIdx];
       //console.log("  curAngRad: " + curAngRad);
       // Decide whether to move right or left
+      unitDirectionArray[dofIdx] = 1;
       if (curAngRad > midpointAngleRad) {
-        unitDirectionArray[dofIdx] = -1;
+        unitDirectionArray[dofIdx] -1;
       }
-      curAngRad += unitDirectionArray[dofIdx] * moveRadians;
+      curAngRad += moveRadians * unitDirectionArray[dofIdx];
       if (curAngRad >= 0.0 && curAngRad < degreesToRadians(360)) {
         arrayOfAnglesRad[dofIdx] = curAngRad;
         var tempDistance = lossFunction(arrayOfAnglesRad);
         if (tempDistance > minDistance) {
-          // Moving in the wrong direction
+          // Moving in the wrong direction so switch direction and adjust the angle
           unitDirectionArray[dofIdx] *= -1;
+          curAngRad += moveRadians * unitDirectionArray[dofIdx];
+          arrayOfAnglesRad[dofIdx] = curAngRad;
         }
-        while (tempDistance < minDistance && curAngRad >= moveRadians && curAngRad < degreesToRadians(360 - moveRadians)) {
+        else {
           minDistance = tempDistance;
+        }
+        var finishedWithWhileLoop = false;
+        while (!finishedWithWhileLoop) {
           curAngRad += moveRadians * unitDirectionArray[dofIdx];
           arrayOfAnglesRad[dofIdx] = curAngRad;
           tempDistance = lossFunction(arrayOfAnglesRad);
+          if (tempDistance > minDistance) {
+            finishedWithWhileLoop = true;
+          }
+          else if (curAngRad <= moveRadians || curAngRad > degreesToRadians(360) - moveRadians) {
+            finishedWithWhileLoop = true;
+          }
+          else {
+            minDistance = tempDistance;
+          }
         }
         rotationangles[dofIdx].value = radiansToDegrees(curAngRad);
-        minDistance = tempDistance;
-        console.log("minDistance: " + minDistance);
+        //if (tempDistance < minDistance) {
+          //minDistance = tempDistance;
+        //}
+        //console.log("minDistance: " + minDistance);
       }
     }
   }
@@ -271,7 +278,7 @@ var demo = new Vue({
       rotationangles [0].value = 359 - rotationangles [0].value;
     },
     optimizerotationangles: function() {
-      var angles180DegreeArray = create180AnglesArray();
+      var angles180DegreeArray = Array(rotationDegOfFreedom).fill(180);
       for (var i = 0; i < rotationDegOfFreedom; i++) {
         rotationangles[i].value = angles180DegreeArray[i];
       }
