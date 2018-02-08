@@ -188,7 +188,7 @@ function loss(arrayOfAngles) {
  */
 function optimizeRotationAngles(lossFunction) {
   var arrayOfAnglesRad = Array(rotationDegOfFreedom).fill(0);
-  var numEpochs = 40; // number of iterations over the rotational angles
+  var numEpochs = 30; // number of iterations over the rotational angles
   var minDistance = Number.POSITIVE_INFINITY;
 
   //For each degree of freedom this will be either 1 or -1, signifying direction of movement
@@ -282,12 +282,6 @@ var demo = new Vue({
       for (var i = 0; i < rotationDegOfFreedom; i++) {
         rotationangles[i].value = angles180DegreeArray[i];
       }
-
-      /*
-      for (var i = 0; i < rotationDegOfFreedom; i++) {
-        rotationangles[i].value = math.random(0.0, 360);
-      }
-      */
 
       var solutionInRad = optimizeRotationAngles(loss);
       var solutionInDeg = Array(rotationDegOfFreedom).fill(0);
