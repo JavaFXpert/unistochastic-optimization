@@ -34,7 +34,7 @@ var rotationangles  = [
 var showuni = false;
 
 // Euclidean distance between desired stochastic matrix and calculated unistochastic matrix
-var euclideandistance = 10;
+var objwrapper = {euclideandistance: 23};
 
 // constant for number of degrees of freedom in 8 dimensional rotations
 var rotationDegOfFreedom = 28;
@@ -54,9 +54,6 @@ Vue.component('demo-grid', {
       //return computeStochasticMatrix().valueOf();
       return computeStochasticMatrix(createAnglesArrayFromRotationAngles()).valueOf();
     },
-    eucldist: function() {
-      return euclideandistance;
-    }
   },
   methods: {
   }
@@ -124,7 +121,6 @@ function computeStochasticMatrix(arrayOfAngles) {
 
   //TODO: Remove
   euclidean(rotatedMatrix, desiredHarmonyMatrix);
-
   return rotatedMatrix;
 }
 
@@ -156,8 +152,8 @@ function euclidean(computedMatrix, desiredMatrix) {
     sumOfSquares += differenceArraySquared[i];
   }
   euclDist = math.sqrt(sumOfSquares);
-  euclideandistance = euclDist;
-  console.log("euclideandistance: " + euclideandistance);
+  this.objwrapper.euclideandistance = euclDist;
+  console.log("euclideandistance: " + this.objwrapper.euclideandistance);
   return euclDist;
 }
 
@@ -183,7 +179,7 @@ var demo = new Vue({
     gridColNames: ["C'", "D'", "E'", "F'", "G'", "A'", "B'", "X'"],
     rotationangles : rotationangles,
     showuni: showuni,
-    euclideandistance: euclideandistance
+    objwrapper: objwrapper
   },
   methods: {
     toggleuni: function () {
@@ -198,6 +194,6 @@ var demo = new Vue({
     optimizerotationangles: function() {
       var solution = fmin.nelderMead(loss, create180AnglesArray());
       console.log("solution is at " + solution.x);
-    }
+    },
   }
 })
