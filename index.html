@@ -46,6 +46,8 @@
 
       <button @click="optimizerotationangles">Optimize</button>
 
+      <p>Euclidean Distance: {{euclideandistance}}</p>
+
       <!-- rotation angle sliders -->
       <table>
         <tbody>
@@ -58,7 +60,7 @@
           </tr>
         </tbody>
       </table>
-      <!--pre id="raw">{{ rotationangles  }}</pre-->
+      <pre id="raw">{{ rotationangles  }}</pre>
     </div>
 
     <script src="grid.js"></script>

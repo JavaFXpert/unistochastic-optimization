@@ -30,10 +30,14 @@ var rotationangles  = [
   { label: 'BX', value: 0 }
 ]
 
-var rotationDegOfFreedom = 28;
-
 // Determines whether to show the unistochastic (squared) matrix
 var showuni = false;
+
+// Euclidean distance between desired stochastic matrix and calculated unistochastic matrix
+var euclideandistance = 10;
+
+// constant for number of degrees of freedom in 8 dimensional rotations
+var rotationDegOfFreedom = 28;
 
 // register the grid component
 Vue.component('demo-grid', {
@@ -49,6 +53,9 @@ Vue.component('demo-grid', {
     matrixAsArray: function () {
       //return computeStochasticMatrix().valueOf();
       return computeStochasticMatrix(createAnglesArrayFromRotationAngles()).valueOf();
+    },
+    eucldist: function() {
+      return euclideandistance;
     }
   },
   methods: {
@@ -66,6 +73,7 @@ function createAnglesArrayFromRotationAngles() {
   for (var i = 0; i < rotationDegOfFreedom; i++) {
     anglesArray[i] = degreesToRadians(rotationangles[i].value);
   }
+  //console.log("anglesArray: " + anglesArray)
   return anglesArray;
 }
 
@@ -77,7 +85,7 @@ function computeStochasticMatrix(arrayOfAngles) {
   matrixDims = 8;
   var a = math.zeros(rotationDegOfFreedom);
   for (var i = 0; i < rotationDegOfFreedom; i++) {
-    a[i] = degreesToRadians(arrayOfAngles[i]);
+    a[i] = arrayOfAngles[i];
   }
   var matrix = math.eye(matrixDims);
   var rotatedMatrix =
@@ -114,6 +122,9 @@ function computeStochasticMatrix(arrayOfAngles) {
     rotatedMatrix = math.square(rotatedMatrix);
   }
 
+  //TODO: Remove
+  euclidean(rotatedMatrix, desiredHarmonyMatrix);
+
   return rotatedMatrix;
 }
 
@@ -124,6 +135,17 @@ function degreesToRadians(angleInDegrees) {
 }
 
 //Nelder-Mead optimization code -----------------
+// C4  D4  E4  F4  G4  A4  B4  C5
+var desiredHarmonyMatrix = math.matrix(
+  [[.00, .00, .25, .25, .25, .25, .00, .00], //C4
+    [.00, .00, .00, .25, .25, .25, .25, .00], //D4
+    [.20, .00, .00, .00, .20, .20, .20, .20], //E4
+    [.20, .20, .00, .00, .00, .20, .00, .20], //F4
+    [.20, .20, .20, .00, .00, .00, .20, .20], //G4
+    [.20, .20, .20, .20, .00, .00, .00, .20], //A4
+    [.00, .33, .33, .00, .33, .00, .00, .00], //B4
+    [.00, .00, .25, .25, .25, .25, .00, .00]]); //C5
+
 function euclidean(computedMatrix, desiredMatrix) {
   var differenceMatrix =
     math.subtract(computedMatrix, desiredMatrix);
@@ -133,33 +155,22 @@ function euclidean(computedMatrix, desiredMatrix) {
   for (var i = 0; i < differenceArraySquared.length; i++) {
     sumOfSquares += differenceArraySquared[i];
   }
-  var euclideanDistance = math.sqrt(sumOfSquares);
-  console.log("euclideanDistance: " + euclideanDistance);
-  return euclideanDistance;
+  euclDist = math.sqrt(sumOfSquares);
+  euclideandistance = euclDist;
+  console.log("euclideandistance: " + euclideandistance);
+  return euclDist;
 }
 
 function loss(arrayOfAngles) {
   var rotMatrix = computeStochasticMatrix(arrayOfAngles);
-  //TODO: Don't use this flag
+  //TODO: Find a better way so that we don't use this flag
   if (!showuni) {
     rotMatrix = math.square(rotMatrix);
   }
 
-  // C4  D4  E4  F4  G4  A4  B4  C5
-  var desiredHarmonyMatrix = math.matrix(
-    [[.00, .00, .25, .25, .25, .25, .00, .00], //C4
-      [.00, .00, .00, .25, .25, .25, .25, .00], //D4
-      [.20, .00, .00, .00, .20, .20, .20, .20], //E4
-      [.20, .20, .00, .00, .00, .20, .00, .20], //F4
-      [.20, .20, .20, .00, .00, .00, .20, .20], //G4
-      [.20, .20, .20, .20, .00, .00, .00, .20], //A4
-      [.00, .33, .33, .00, .33, .00, .00, .00], //B4
-      [.00, .00, .25, .25, .25, .25, .00, .00]]); //C5
-
   // Get Euclidean distance between computed and desired matrices
-  var euclideanDistance = euclidean(rotMatrix, desiredHarmonyMatrix);
-
-  return euclideanDistance;
+  var euclidDist = euclidean(rotMatrix, desiredHarmonyMatrix);
+  return euclidDist;
 }
 // end of Nelder-Mead optimization code -----------
 
@@ -170,8 +181,9 @@ var demo = new Vue({
     gridNumRowsCols: 8,
     gridRowNames: ['C', 'D', 'E', 'F', 'G', 'A', 'B', 'X'],
     gridColNames: ["C'", "D'", "E'", "F'", "G'", "A'", "B'", "X'"],
-    rotationangles : rotationangles ,
-    showuni: showuni
+    rotationangles : rotationangles,
+    showuni: showuni,
+    euclideandistance: euclideandistance
   },
   methods: {
     toggleuni: function () {
