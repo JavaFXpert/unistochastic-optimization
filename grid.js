@@ -57,7 +57,7 @@ Vue.component('demo-grid', {
   computed: {
     matrixAsArray: function () {
       //return computeStochasticMatrix().valueOf();
-      return computeStochasticMatrix(createAnglesArrayFromRotationAngles()).valueOf();
+      return computeStochasticMatrix(createAnglesArrayFromRotationAngles(), showuni).valueOf();
     },
   },
   methods: {
@@ -83,7 +83,7 @@ function createAnglesArrayFromRotationAngles() {
 // function to compute rotation matrix
 //function computeStochasticMatrix(anglesArrayInDegrees, showUnistochastic) {
 //function computeStochasticMatrix() {
-function computeStochasticMatrix(arrayOfAngles) {
+function computeStochasticMatrix(arrayOfAngles, unistochastic) {
   matrixDims = 8;
   var a = math.zeros(rotationDegOfFreedom);
   for (var i = 0; i < rotationDegOfFreedom; i++) {
@@ -127,7 +127,7 @@ function computeStochasticMatrix(arrayOfAngles) {
   euclidean(rotatedMatrixSquared, desiredHarmonyMatrix);
 
   var retVal = rotatedMatrix;
-  if (showuni) {
+  if (unistochastic) {
     retVal = rotatedMatrixSquared;
   }
 
@@ -167,7 +167,7 @@ function euclidean(computedMatrix, desiredMatrix) {
 }
 
 function loss(arrayOfAngles) {
-  var rotMatrix = computeStochasticMatrix(arrayOfAngles);
+  var rotMatrix = computeStochasticMatrix(arrayOfAngles, true);
   //TODO: Find a better way so that we don't use this flag
   if (!showuni) {
     rotMatrix = math.square(rotMatrix);
