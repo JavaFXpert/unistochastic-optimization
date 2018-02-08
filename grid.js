@@ -85,9 +85,13 @@ function createAnglesArrayFromRotationAngles() {
 }
 
 
-// function to compute rotation matrix
-//function computeStochasticMatrix(anglesArrayInDegrees, showUnistochastic) {
-//function computeStochasticMatrix() {
+/**
+ * Function to compute rotation matrix
+ * @param arrayOfAngles Array of rotation angles in radians
+ * @param unistochastic Flag that indicates whether to return a unistochastic matrix,
+ *                      or the underlying unitary matrix
+ * @returns {Unit|*}
+ */
 function computeStochasticMatrix(arrayOfAngles, unistochastic) {
   matrixDims = 8;
   var a = math.zeros(rotationDegOfFreedom);
@@ -173,7 +177,7 @@ function euclidean(computedMatrix, desiredMatrix) {
     sumOfSquares += differenceArraySquared[i];
   }
   this.rv.euclideandistance = math.sqrt(sumOfSquares);
-  console.log("euclideandistance: " + this.rv.euclideandistance);
+  //console.log("euclideandistance: " + this.rv.euclideandistance);
   return this.rv.euclideandistance;
 }
 
@@ -182,14 +186,62 @@ function loss(arrayOfAngles) {
 
   // Get Euclidean distance between computed and desired matrices
   var euclidDist = euclidean(rotMatrix, desiredHarmonyMatrix);
-  console.log("euclidDist: " + euclidDist);
+  //console.log("euclidDist: " + euclidDist);
   return euclidDist;
 }
 
-function optimizeRotationAngles(lossFunction, arrayOfArguments) {
-  var distance = lossFunction(arrayOfArguments);
-  console.log("distance: " + distance);
-  return arrayOfArguments;
+/**
+ * Optimize the angles to minimize the difference between unistochastic matrix and one desired.
+ * Uses the rotation angles (e.g. set by sliders) as a starting point
+ * @param lossFunction
+ * @returns Array of rotation angles in radians, optimized for the best fit
+ */
+function optimizeRotationAngles(lossFunction) {
+  var arrayOfAnglesRad = Array(rotationDegOfFreedom).fill(0);
+  var numEpochs = 5; // number of iterations over the rotational angles
+  var minDistance = Number.POSITIVE_INFINITY;
+  var unitDirection = 1; //Will be either 1 or -1, signifying direction of movement
+  var moveRadians = degreesToRadians(.1);
+  var midpointAngleRad = degreesToRadians(180);
+
+  for (var i = 0; i < rotationDegOfFreedom; i++) {
+    arrayOfAnglesRad[i] = degreesToRadians(rotationangles[i].value);
+  }
+  minDistance = lossFunction(arrayOfAnglesRad);
+
+  for (var epochIdx = 0; epochIdx < numEpochs - 1; epochIdx++) {
+    console.log("epochIdx: " + epochIdx);
+    for (var dofIdx = 0; dofIdx < rotationDegOfFreedom; dofIdx++) {
+      console.log("dofIdx: " + dofIdx);
+      var curAngRad = arrayOfAnglesRad[dofIdx];
+      //console.log("  curAngRad: " + curAngRad);
+      // Decide whether to move right or left
+      if (curAngRad > midpointAngleRad) {
+        unitDirection = -1;
+      }
+      curAngRad += unitDirection * moveRadians;
+      if (curAngRad >= 0.0 && curAngRad < degreesToRadians(360)) {
+        arrayOfAnglesRad[dofIdx] = curAngRad;
+        var tempDistance = lossFunction(arrayOfAnglesRad);
+        if (tempDistance > minDistance) {
+          // Moving in the wrong direction
+          unitDirection *= -1;
+        }
+        while (tempDistance < minDistance && curAngRad >= 0.0 && curAngRad < degreesToRadians(360)) {
+          minDistance = tempDistance;
+          curAngRad += moveRadians * unitDirection;
+          arrayOfAnglesRad[dofIdx] = curAngRad;
+          tempDistance = lossFunction(arrayOfAnglesRad);
+        }
+        rotationangles[dofIdx].value = radiansToDegrees(curAngRad);
+        minDistance = tempDistance;
+        console.log("minDistance: " + minDistance);
+      }
+    }
+  }
+
+  console.log("distance: " + minDistance);
+  return arrayOfAnglesRad;
 }
 
 // end of optimization code -----------
@@ -216,7 +268,11 @@ var demo = new Vue({
       rotationangles [0].value = 359 - rotationangles [0].value;
     },
     optimizerotationangles: function() {
-      var solutionInRad = optimizeRotationAngles(loss, create180AnglesArray());
+      var angles180DegreeArray = create180AnglesArray();
+      for (var i = 0; i < rotationDegOfFreedom; i++) {
+        rotationangles[i].value = angles180DegreeArray[i];
+      }
+      var solutionInRad = optimizeRotationAngles(loss);
       var solutionInDeg = Array(rotationDegOfFreedom).fill(0);
       for (var i = 0; i < rotationDegOfFreedom; i++) {
         solutionInDeg[i] = radiansToDegrees(solutionInRad[i]);
