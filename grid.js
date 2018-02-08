@@ -203,9 +203,9 @@ function optimizeRotationAngles(lossFunction) {
   minDistance = lossFunction(arrayOfAnglesRad);
 
   for (var epochIdx = 0; epochIdx < numEpochs - 1; epochIdx++) {
-    console.log("epochIdx: " + epochIdx);
+    //console.log("epochIdx: " + epochIdx);
     for (var dofIdx = 0; dofIdx < rotationDegOfFreedom; dofIdx++) {
-      console.log("dofIdx: " + dofIdx);
+      //console.log("dofIdx: " + dofIdx);
       var curAngRad = arrayOfAnglesRad[dofIdx];
       //console.log("  curAngRad: " + curAngRad);
       // Decide whether to move right or left
@@ -242,15 +242,11 @@ function optimizeRotationAngles(lossFunction) {
           }
         }
         rotationangles[dofIdx].value = radiansToDegrees(curAngRad);
-        //if (tempDistance < minDistance) {
-          //minDistance = tempDistance;
-        //}
-        //console.log("minDistance: " + minDistance);
       }
     }
   }
 
-  console.log("distance: " + minDistance);
+  //console.log("distance: " + minDistance);
   return arrayOfAnglesRad;
 }
 
@@ -289,7 +285,7 @@ var demo = new Vue({
         solutionInDeg[i] = radiansToDegrees(solutionInRad[i]);
         rotationangles[i].value = solutionInDeg[i];
       }
-      console.log("solution is: " + solutionInDeg);
+      //console.log("solution is: " + solutionInDeg);
     },
   }
 })
