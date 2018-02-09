@@ -37,14 +37,14 @@ var showuni = true;
 // TODO: Ascertain how to not have to use a wrapper to make reactive variables stay in sync with
 //       the Vue data.
 var rv = {
-  // Spepcified number of rotation angle degrees at a time to move when optimizing unistochastic matrix
-  optimizedegreemovement: 1.00,
+  // Spepcified resolution of rotation angle degrees at a time to move when optimizing unistochastic matrix
+  degreedecimals: 0,
 
   // Specified number of iterations over the rotational angles when optimizing unistochastic matrix
-  numepochs: 40,
+  numepochs: 20,
 
   // Specified penalty factor for any element whose desired value is zero, when optimizing unistochastic matrix
-  zeroelementpenaltyfactor: 0.4,
+  zeroelementpenaltyfactor: 0.0,
 
   // Calculated Euclidean distance between desired stochastic matrix and calculated unistochastic matrix
   euclideandistance: Number.POSITIVE_INFINITY,
@@ -79,6 +79,17 @@ var desiredMelodyMatrix = math.matrix(
       [.07, .08, .10, .15, .25, .00, .20, .15], //A4
       [.00, .25, .20, .00, .25, .30, .00, .00], //B4
       [.00, .00, .25, .10, .05, .25, .35, .00]]); //C5
+
+// C4  D4  E4  F4  G4  A4  B4  C5
+var desiredPermutationMatrix = math.matrix(
+     [[.00, 1.0, .00, .00, .00, .00, .00, .00], //C4
+      [.00, .00, 1.0, .00, .00, .00, .00, .00], //D4
+      [.00, .00, .00, 1.0, .00, .00, .00, .00], //E4
+      [.00, .00, .00, .00, 1.0, .00, .00, .00], //F4
+      [.00, .00, .00, .00, .00, 1.0, .00, .00], //G4
+      [.00, .00, .00, .00, .00, .00, 1.0, .00], //A4
+      [.00, .00, .00, .00, .00, .00, .00, 1.0], //B4
+      [1.0, .00, .00, .00, .00, .00, .00, .00]]); //C5
 
 var matrixToOptimize = desiredHarmonyMatrix;
 
@@ -242,7 +253,7 @@ function optimizeRotationAngles(lossFunction) {
   //For each degree of freedom this will be either 1 or -1, signifying direction of movement
   var unitDirectionArray = Array(rotationDegOfFreedom).fill(1);
 
-  var moveRadians = degreesToRadians(this.rv.optimizedegreemovement);
+  var moveRadians = degreesToRadians(math.pow(10, -rv.degreedecimals));
   var midpointAngleRad = degreesToRadians(180);
 
   for (var i = 0; i < rotationDegOfFreedom; i++) {
@@ -260,7 +271,7 @@ function optimizeRotationAngles(lossFunction) {
       // Decide whether to move right or left
       unitDirectionArray[dofIdx] = 1;
       if (curAngRad > midpointAngleRad) {
-        unitDirectionArray[dofIdx] -1;
+        unitDirectionArray[dofIdx] = -1;
       }
       proposedCurAngRad += moveRadians * unitDirectionArray[dofIdx];
       if (proposedCurAngRad >= 0.0 && proposedCurAngRad < degreesToRadians(360)) {
@@ -290,7 +301,7 @@ function optimizeRotationAngles(lossFunction) {
               arrayOfAnglesRad[dofIdx] = curAngRad;
               finishedWithWhileLoop = true;
             }
-            else if (loopIterations > 100) {
+            else if (loopIterations > 360 / math.pow(10, -rv.degreedecimals)) {
               alert("Unexpected: Was in while loop over " + loopIterations + " iterations.");
               finishedWithWhileLoop = true;
             }
@@ -351,7 +362,7 @@ var demo = new Vue({
       var solutionInDeg = Array(rotationDegOfFreedom).fill(0);
       for (var i = 0; i < rotationDegOfFreedom; i++) {
         solutionInDeg[i] = radiansToDegrees(solutionInRad[i]);
-        solutionInDeg = math.round(solutionInDeg);
+        solutionInDeg = math.round(solutionInDeg,  rv.degreedecimals);
         rotationangles[i].value = solutionInDeg[i];
       }
       //console.log("solution is: " + solutionInDeg);
