@@ -37,17 +37,21 @@ var showuni = true;
 // TODO: Ascertain how to not have to use a wrapper to make reactive variables stay in sync with
 //       the Vue data.
 var rv = {
-  // Euclidean distance between desired stochastic matrix and calculated unistochastic matrix
-  euclideandistance: Number.POSITIVE_INFINITY,
-
-  // Number of rotation angle degrees at a time to move when optimizing unistochastic matrix
+  // Spepcified number of rotation angle degrees at a time to move when optimizing unistochastic matrix
   optimizedegreemovement: 1.00,
 
-  // Number of iterations over the rotational angles when optimizing unistochastic matrix
+  // Specified number of iterations over the rotational angles when optimizing unistochastic matrix
   numepochs: 40,
 
-  // Penalty factor for any element whose desired value is zero, when optimizing unistochastic matrix
+  // Specified penalty factor for any element whose desired value is zero, when optimizing unistochastic matrix
   zeroelementpenaltyfactor: 0.4,
+
+  // Calculated Euclidean distance between desired stochastic matrix and calculated unistochastic matrix
+  euclideandistance: Number.POSITIVE_INFINITY,
+
+  // Calculated penalty for any element whose desired value is zero, when optimizing unistochastic matrix
+  addedpenalty: 0.0,
+
 };
 
 // C4  D4  E4  F4  G4  A4  B4  C5
@@ -194,17 +198,17 @@ function euclidean(computedMatrix, desiredMatrix) {
   var trueEuclDist = math.sqrt(sumOfSquares);
   //console.log("trueEuclDist: " + trueEuclDist);
 
-  var addedPenalty = 0.0;
+  this.rv.addedpenalty = 0.0;
   var desiredMatrixArray = math.flatten(desiredMatrix).valueOf();
   var computedMatrixArray = math.flatten(computedMatrix).valueOf();
   for (var i = 0; i < desiredMatrixArray.length; i++) {
     if (desiredMatrixArray[i] < 0.01) {
-      addedPenalty += computedMatrixArray[i] * rv.zeroelementpenaltyfactor;
+      this.rv.addedpenalty += computedMatrixArray[i] * this.rv.zeroelementpenaltyfactor;
     }
   }
-  //console.log("addedPenalty: " + addedPenalty);
+  //console.log("this.rv.addedpenalty: " + this.rv.addedpenalty);
 
-  this.rv.euclideandistance = trueEuclDist + addedPenalty;
+  this.rv.euclideandistance = trueEuclDist + this.rv.addedpenalty;
   //----- End Penalize extra for any element whose desired value is zero -----
 
   //TODO: Uncomment next line if penalize logic isn't effective
