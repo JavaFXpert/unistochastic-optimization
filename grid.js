@@ -179,7 +179,28 @@ function euclidean(computedMatrix, desiredMatrix) {
   for (var i = 0; i < differenceArraySquared.length; i++) {
     sumOfSquares += differenceArraySquared[i];
   }
-  this.rv.euclideandistance = math.sqrt(sumOfSquares);
+
+  //----- Penalize extra for any element whose desired value is zero ------
+  //TODO: Make these operations faster if the concept works
+  var trueEuclDist = math.sqrt(sumOfSquares);
+  //console.log("trueEuclDist: " + trueEuclDist);
+
+  var addedPenalty = 0.0;
+  var desiredMatrixArray = math.flatten(desiredMatrix).valueOf();
+  var computedMatrixArray = math.flatten(computedMatrix).valueOf();
+  for (var i = 0; i < desiredMatrixArray.length; i++) {
+    if (desiredMatrixArray[i] < 0.01) {
+      addedPenalty += computedMatrixArray[i] * 0.4; //TODO: Create constant
+    }
+  }
+  //console.log("addedPenalty: " + addedPenalty);
+
+  this.rv.euclideandistance = trueEuclDist + addedPenalty;
+  //----- End Penalize extra for any element whose desired value is zero -----
+
+  //TODO: Uncomment next line if penalize logic isn't effective
+  //this.rv.euclideandistance = math.sqrt(sumOfSquares);
+
   //console.log("euclideandistance: " + this.rv.euclideandistance);
   return this.rv.euclideandistance;
 }
@@ -243,7 +264,9 @@ function optimizeRotationAngles(lossFunction) {
           minDistance = tempDistance;
         }
         var finishedWithWhileLoop = false;
+        var loopIterations = 0;
         while (!finishedWithWhileLoop) {
+          loopIterations++;
           proposedCurAngRad += moveRadians * unitDirectionArray[dofIdx];
           if (proposedCurAngRad >= 0.0 && proposedCurAngRad < degreesToRadians(360)) {
             arrayOfAnglesRad[dofIdx] = proposedCurAngRad;
@@ -253,11 +276,18 @@ function optimizeRotationAngles(lossFunction) {
               arrayOfAnglesRad[dofIdx] = curAngRad;
               finishedWithWhileLoop = true;
             }
+            else if (loopIterations > 100) {
+              alert("Unexpected: Was in whilt loop " + loopIterations + " iterations.");
+              finishedWithWhileLoop = true;
+            }
             else {
               // Distance is not increasing, so use the proposed angle
               curAngRad = proposedCurAngRad;
               minDistance = tempDistance;
             }
+          }
+          else {
+            finishedWithWhileLoop = true;
           }
         }
         //rotationangles[dofIdx].value = radiansToDegrees(curAngRad);
