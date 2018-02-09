@@ -38,8 +38,32 @@ var showuni = false;
 //       the Vue data.
 var rv = {
   // Euclidean distance between desired stochastic matrix and calculated unistochastic matrix
-  euclideandistance: 23
+  euclideandistance: Number.POSITIVE_INFINITY
 };
+
+// C4  D4  E4  F4  G4  A4  B4  C5
+var desiredHarmonyMatrix = math.matrix(
+    [[.00, .00, .25, .25, .25, .25, .00, .00], //C4
+      [.00, .00, .00, .25, .25, .25, .25, .00], //D4
+      [.20, .00, .00, .00, .20, .20, .20, .20], //E4
+      [.20, .20, .00, .00, .00, .20, .00, .20], //F4
+      [.20, .20, .20, .00, .00, .00, .20, .20], //G4
+      [.20, .20, .20, .20, .00, .00, .00, .20], //A4
+      [.00, .33, .33, .00, .33, .00, .00, .00], //B4
+      [.00, .00, .25, .25, .25, .25, .00, .00]]); //C5
+
+// C4  D4  E4  F4  G4  A4  B4  C5
+var desiredMelodyMatrix = math.matrix(
+    [[.00, .30, .25, .20, .15, .10, .00, .00], //C4
+      [.00, .00, .30, .25, .20, .15, .10, .00], //D4
+      [.10, .25, .00, .20, .15, .13, .10, .07], //E4
+      [.05, .20, .25, .00, .20, .20, .00, .10], //F4
+      [.05, .10, .15, .25, .00, .20, .15, .10], //G4
+      [.07, .08, .10, .15, .25, .00, .20, .15], //A4
+      [.00, .25, .20, .00, .25, .30, .00, .00], //B4
+      [.00, .00, .25, .10, .05, .25, .35, .00]]); //C5
+
+var matrixToOptimize = desiredMelodyMatrix;
 
 // constant for number of degrees of freedom in 8 dimensional rotations
 var rotationDegOfFreedom = 28;
@@ -123,7 +147,7 @@ function computeStochasticMatrix(arrayOfAngles, unistochastic) {
   var rotatedMatrixSquared = math.square(rotatedMatrix);
 
   // Calculate how closely this matrix fits the desired stochastic matrix
-  euclidean(rotatedMatrixSquared, desiredHarmonyMatrix);
+  euclidean(rotatedMatrixSquared, matrixToOptimize);
 
   var retVal = rotatedMatrix;
   if (unistochastic) {
@@ -146,17 +170,6 @@ function radiansToDegrees(angleInRadians) {
 }
 
 // Optimization code -----------------
-// C4  D4  E4  F4  G4  A4  B4  C5
-var desiredHarmonyMatrix = math.matrix(
-  [[.00, .00, .25, .25, .25, .25, .00, .00], //C4
-    [.00, .00, .00, .25, .25, .25, .25, .00], //D4
-    [.20, .00, .00, .00, .20, .20, .20, .20], //E4
-    [.20, .20, .00, .00, .00, .20, .00, .20], //F4
-    [.20, .20, .20, .00, .00, .00, .20, .20], //G4
-    [.20, .20, .20, .20, .00, .00, .00, .20], //A4
-    [.00, .33, .33, .00, .33, .00, .00, .00], //B4
-    [.00, .00, .25, .25, .25, .25, .00, .00]]); //C5
-
 function euclidean(computedMatrix, desiredMatrix) {
   var differenceMatrix =
     math.subtract(computedMatrix, desiredMatrix);
@@ -175,7 +188,7 @@ function loss(arrayOfAngles) {
   var rotMatrix = computeStochasticMatrix(arrayOfAngles, true);
 
   // Get Euclidean distance between computed and desired matrices
-  var euclidDist = euclidean(rotMatrix, desiredHarmonyMatrix);
+  var euclidDist = euclidean(rotMatrix, matrixToOptimize);
   //console.log("euclidDist: " + euclidDist);
   return euclidDist;
 }
@@ -188,13 +201,13 @@ function loss(arrayOfAngles) {
  */
 function optimizeRotationAngles(lossFunction) {
   var arrayOfAnglesRad = Array(rotationDegOfFreedom).fill(0);
-  var numEpochs = 30; // number of iterations over the rotational angles
+  var numEpochs = 40; // number of iterations over the rotational angles
   var minDistance = Number.POSITIVE_INFINITY;
 
   //For each degree of freedom this will be either 1 or -1, signifying direction of movement
   var unitDirectionArray = Array(rotationDegOfFreedom).fill(1);
 
-  var moveRadians = degreesToRadians(0.10);
+  var moveRadians = degreesToRadians(1.00);
   var midpointAngleRad = degreesToRadians(180);
 
   for (var i = 0; i < rotationDegOfFreedom; i++) {
@@ -202,51 +215,62 @@ function optimizeRotationAngles(lossFunction) {
   }
   minDistance = lossFunction(arrayOfAnglesRad);
 
-  for (var epochIdx = 0; epochIdx < numEpochs - 1; epochIdx++) {
-    //console.log("epochIdx: " + epochIdx);
+  for (var epochIdx = 0; epochIdx < numEpochs; epochIdx++) {
+    console.log("epochIdx: " + epochIdx);
     for (var dofIdx = 0; dofIdx < rotationDegOfFreedom; dofIdx++) {
-      //console.log("dofIdx: " + dofIdx);
+      console.log("dofIdx: " + dofIdx);
       var curAngRad = arrayOfAnglesRad[dofIdx];
+      var proposedCurAngRad = curAngRad;
       //console.log("  curAngRad: " + curAngRad);
       // Decide whether to move right or left
       unitDirectionArray[dofIdx] = 1;
       if (curAngRad > midpointAngleRad) {
         unitDirectionArray[dofIdx] -1;
       }
-      curAngRad += moveRadians * unitDirectionArray[dofIdx];
-      if (curAngRad >= 0.0 && curAngRad < degreesToRadians(360)) {
-        arrayOfAnglesRad[dofIdx] = curAngRad;
+      proposedCurAngRad += moveRadians * unitDirectionArray[dofIdx];
+      if (proposedCurAngRad >= 0.0 && proposedCurAngRad < degreesToRadians(360)) {
+        arrayOfAnglesRad[dofIdx] = proposedCurAngRad;
+
         var tempDistance = lossFunction(arrayOfAnglesRad);
         if (tempDistance > minDistance) {
-          // Moving in the wrong direction so switch direction and adjust the angle
-          unitDirectionArray[dofIdx] *= -1;
-          curAngRad += moveRadians * unitDirectionArray[dofIdx];
+          // Moving in the wrong direction so restore the angle in the array and switch direction
           arrayOfAnglesRad[dofIdx] = curAngRad;
+          unitDirectionArray[dofIdx] *= -1;
         }
         else {
+          // Moving in the right direction so use the proposed angle
+          curAngRad = proposedCurAngRad;
           minDistance = tempDistance;
         }
         var finishedWithWhileLoop = false;
         while (!finishedWithWhileLoop) {
-          curAngRad += moveRadians * unitDirectionArray[dofIdx];
-          arrayOfAnglesRad[dofIdx] = curAngRad;
-          tempDistance = lossFunction(arrayOfAnglesRad);
-          if (tempDistance > minDistance) {
-            finishedWithWhileLoop = true;
-          }
-          else if (curAngRad <= moveRadians || curAngRad > degreesToRadians(360) - moveRadians) {
-            finishedWithWhileLoop = true;
-          }
-          else {
-            minDistance = tempDistance;
+          proposedCurAngRad += moveRadians * unitDirectionArray[dofIdx];
+          if (proposedCurAngRad >= 0.0 && proposedCurAngRad < degreesToRadians(360)) {
+            arrayOfAnglesRad[dofIdx] = proposedCurAngRad;
+            tempDistance = lossFunction(arrayOfAnglesRad);
+            if (tempDistance > minDistance) {
+              // Distance is increasing so restore the angle in the array and leave the loop
+              arrayOfAnglesRad[dofIdx] = curAngRad;
+              finishedWithWhileLoop = true;
+            }
+            else {
+              // Distance is not increasing, so use the proposed angle
+              curAngRad = proposedCurAngRad;
+              minDistance = tempDistance;
+            }
           }
         }
-        rotationangles[dofIdx].value = radiansToDegrees(curAngRad);
+        //rotationangles[dofIdx].value = radiansToDegrees(curAngRad);
       }
+      //console.log("  minDistance: " + minDistance);
+      console.log("  euclideanDistance: " + lossFunction(arrayOfAnglesRad));
+      //console.log("  arrayOfAnglesRad: " + arrayOfAnglesRad);
     }
   }
 
-  //console.log("distance: " + minDistance);
+  console.log("minDistance: " + minDistance);
+  //console.log("  euclideanDistance: " + lossFunction(arrayOfAnglesRad));
+  //console.log("  arrayOfAnglesRad: " + arrayOfAnglesRad);
   return arrayOfAnglesRad;
 }
 
@@ -285,7 +309,7 @@ var demo = new Vue({
         solutionInDeg[i] = radiansToDegrees(solutionInRad[i]);
         rotationangles[i].value = solutionInDeg[i];
       }
-      //console.log("solution is: " + solutionInDeg);
+      console.log("solution is: " + solutionInDeg);
     },
   }
 })
