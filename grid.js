@@ -49,8 +49,12 @@ var rv = {
   // Calculated Euclidean distance between desired stochastic matrix and calculated unistochastic matrix
   euclideandistance: Number.POSITIVE_INFINITY,
 
-  // Calculated penalty for any element whose desired value is zero, when optimizing unistochastic matrix
+  // Calculated penalty for any element in desired matrix whose desired value is zero as compared to the
+  // corresponding element in the unistochastic matrix
   addedpenalty: 0.0,
+
+  // Calculated total cost between desired matrix and unistochastic matrix
+  totalcostbetweenmatrices: 0.0,
 
 };
 
@@ -195,12 +199,12 @@ function euclidean(computedMatrix, desiredMatrix) {
 
   //----- Penalize extra for any element whose desired value is zero ------
   //TODO: Make these operations faster if the concept works
-  var trueEuclDist = math.sqrt(sumOfSquares);
-  //console.log("trueEuclDist: " + trueEuclDist);
+  this.rv.euclideandistance = math.sqrt(sumOfSquares);
+  //console.log("this.rv.euclideandistance: " + this.rv.euclideandistance);
 
   this.rv.addedpenalty = 0.0;
-  var desiredMatrixArray = math.flatten(desiredMatrix).valueOf();
-  var computedMatrixArray = math.flatten(computedMatrix).valueOf();
+  var desiredMatrixArray = math.flatten(desiredMatrix).valueOf(); //TODO: Move or optimize
+  var computedMatrixArray = math.flatten(computedMatrix).valueOf(); //TODO: optimize
   for (var i = 0; i < desiredMatrixArray.length; i++) {
     if (desiredMatrixArray[i] < 0.01) {
       this.rv.addedpenalty += computedMatrixArray[i] * this.rv.zeroelementpenaltyfactor;
@@ -208,14 +212,11 @@ function euclidean(computedMatrix, desiredMatrix) {
   }
   //console.log("this.rv.addedpenalty: " + this.rv.addedpenalty);
 
-  this.rv.euclideandistance = trueEuclDist + this.rv.addedpenalty;
+  this.rv.totalcostbetweenmatrices = this.rv.euclideandistance + this.rv.addedpenalty;
   //----- End Penalize extra for any element whose desired value is zero -----
 
-  //TODO: Uncomment next line if penalize logic isn't effective
-  //this.rv.euclideandistance = math.sqrt(sumOfSquares);
-
   //console.log("euclideandistance: " + this.rv.euclideandistance);
-  return this.rv.euclideandistance;
+  return this.rv.totalcostbetweenmatrices;
 }
 
 function loss(arrayOfAngles) {

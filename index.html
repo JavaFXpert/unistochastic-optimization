@@ -45,7 +45,10 @@
 
       <button @click="optimizerotationangles">Optimize</button>
 
-      <div>{{ "Euclidean Distance: " + Math.round(rv.euclideandistance * 10000) / 10000 }}</div>
+      <div>{{ "Total cost: " + Math.round(rv.totalcostbetweenmatrices * 10000) / 10000 }}
+        {{" = Euclidean distance: " + Math.round(rv.euclideandistance * 10000) / 10000}}
+        {{" + Zeros distance penalty: " + Math.round(rv.addedpenalty * 10000) / 10000 }}
+      </div>
 
       <!-- rotation angle sliders -->
       <table>
