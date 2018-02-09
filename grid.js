@@ -111,6 +111,7 @@ function createAnglesArrayFromRotationAngles() {
   for (var i = 0; i < rotationDegOfFreedom; i++) {
     anglesArray[i] = degreesToRadians(rotationangles[i].value);
   }
+
   //console.log("anglesArray: " + anglesArray)
   return anglesArray;
 }
