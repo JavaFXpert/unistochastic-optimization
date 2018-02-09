@@ -31,7 +31,7 @@ var rotationangles  = [
 ]
 
 // Determines whether to show the unistochastic (squared) matrix
-var showuni = false;
+var showuni = true;
 
 // Object wrapper for reactive variables.
 // TODO: Ascertain how to not have to use a wrapper to make reactive variables stay in sync with
@@ -63,7 +63,7 @@ var desiredMelodyMatrix = math.matrix(
       [.00, .25, .20, .00, .25, .30, .00, .00], //B4
       [.00, .00, .25, .10, .05, .25, .35, .00]]); //C5
 
-var matrixToOptimize = desiredMelodyMatrix;
+var matrixToOptimize = desiredHarmonyMatrix;
 
 // constant for number of degrees of freedom in 8 dimensional rotations
 var rotationDegOfFreedom = 28;
@@ -216,9 +216,9 @@ function optimizeRotationAngles(lossFunction) {
   minDistance = lossFunction(arrayOfAnglesRad);
 
   for (var epochIdx = 0; epochIdx < numEpochs; epochIdx++) {
-    console.log("epochIdx: " + epochIdx);
+    //console.log("epochIdx: " + epochIdx);
     for (var dofIdx = 0; dofIdx < rotationDegOfFreedom; dofIdx++) {
-      console.log("dofIdx: " + dofIdx);
+      //console.log("dofIdx: " + dofIdx);
       var curAngRad = arrayOfAnglesRad[dofIdx];
       var proposedCurAngRad = curAngRad;
       //console.log("  curAngRad: " + curAngRad);
@@ -263,12 +263,12 @@ function optimizeRotationAngles(lossFunction) {
         //rotationangles[dofIdx].value = radiansToDegrees(curAngRad);
       }
       //console.log("  minDistance: " + minDistance);
-      console.log("  euclideanDistance: " + lossFunction(arrayOfAnglesRad));
+      //console.log("  euclideanDistance: " + lossFunction(arrayOfAnglesRad));
       //console.log("  arrayOfAnglesRad: " + arrayOfAnglesRad);
     }
   }
 
-  console.log("minDistance: " + minDistance);
+  //console.log("minDistance: " + minDistance);
   //console.log("  euclideanDistance: " + lossFunction(arrayOfAnglesRad));
   //console.log("  arrayOfAnglesRad: " + arrayOfAnglesRad);
   return arrayOfAnglesRad;
@@ -307,9 +307,10 @@ var demo = new Vue({
       var solutionInDeg = Array(rotationDegOfFreedom).fill(0);
       for (var i = 0; i < rotationDegOfFreedom; i++) {
         solutionInDeg[i] = radiansToDegrees(solutionInRad[i]);
+        solutionInDeg = math.round(solutionInDeg);
         rotationangles[i].value = solutionInDeg[i];
       }
-      console.log("solution is: " + solutionInDeg);
+      //console.log("solution is: " + solutionInDeg);
     },
   }
 })
