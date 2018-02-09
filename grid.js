@@ -38,7 +38,16 @@ var showuni = true;
 //       the Vue data.
 var rv = {
   // Euclidean distance between desired stochastic matrix and calculated unistochastic matrix
-  euclideandistance: Number.POSITIVE_INFINITY
+  euclideandistance: Number.POSITIVE_INFINITY,
+
+  // Number of rotation angle degrees at a time to move when optimizing unistochastic matrix
+  optimizedegreemovement: 1.00,
+
+  // Number of iterations over the rotational angles when optimizing unistochastic matrix
+  numepochs: 40,
+
+  // Penalty factor for any element whose desired value is zero, when optimizing unistochastic matrix
+  zeroelementpenaltyfactor: 0.4,
 };
 
 // C4  D4  E4  F4  G4  A4  B4  C5
@@ -190,7 +199,7 @@ function euclidean(computedMatrix, desiredMatrix) {
   var computedMatrixArray = math.flatten(computedMatrix).valueOf();
   for (var i = 0; i < desiredMatrixArray.length; i++) {
     if (desiredMatrixArray[i] < 0.01) {
-      addedPenalty += computedMatrixArray[i] * 0.4; //TODO: Create constant
+      addedPenalty += computedMatrixArray[i] * rv.zeroelementpenaltyfactor;
     }
   }
   //console.log("addedPenalty: " + addedPenalty);
@@ -222,13 +231,12 @@ function loss(arrayOfAngles) {
  */
 function optimizeRotationAngles(lossFunction) {
   var arrayOfAnglesRad = Array(rotationDegOfFreedom).fill(0);
-  var numEpochs = 40; // number of iterations over the rotational angles
   var minDistance = Number.POSITIVE_INFINITY;
 
   //For each degree of freedom this will be either 1 or -1, signifying direction of movement
   var unitDirectionArray = Array(rotationDegOfFreedom).fill(1);
 
-  var moveRadians = degreesToRadians(1.00);
+  var moveRadians = degreesToRadians(this.rv.optimizedegreemovement);
   var midpointAngleRad = degreesToRadians(180);
 
   for (var i = 0; i < rotationDegOfFreedom; i++) {
@@ -236,7 +244,7 @@ function optimizeRotationAngles(lossFunction) {
   }
   minDistance = lossFunction(arrayOfAnglesRad);
 
-  for (var epochIdx = 0; epochIdx < numEpochs; epochIdx++) {
+  for (var epochIdx = 0; epochIdx < rv.numepochs; epochIdx++) {
     //console.log("epochIdx: " + epochIdx);
     for (var dofIdx = 0; dofIdx < rotationDegOfFreedom; dofIdx++) {
       //console.log("dofIdx: " + dofIdx);
@@ -277,7 +285,7 @@ function optimizeRotationAngles(lossFunction) {
               finishedWithWhileLoop = true;
             }
             else if (loopIterations > 100) {
-              alert("Unexpected: Was in whilt loop " + loopIterations + " iterations.");
+              alert("Unexpected: Was in while loop over " + loopIterations + " iterations.");
               finishedWithWhileLoop = true;
             }
             else {
