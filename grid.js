@@ -91,7 +91,7 @@ var desiredPermutationMatrix = math.matrix(
       [.00, .00, .00, .00, .00, .00, .00, 1.0], //B4
       [1.0, .00, .00, .00, .00, .00, .00, .00]]); //C5
 
-var matrixToOptimize = desiredHarmonyMatrix;
+var matrixToOptimize = desiredMelodyMatrix;
 
 // constant for number of degrees of freedom in 8 dimensional rotations
 var rotationDegOfFreedom = 28;
@@ -365,7 +365,7 @@ var demo = new Vue({
         solutionInDeg = math.round(solutionInDeg,  rv.degreedecimals);
         rotationangles[i].value = solutionInDeg[i];
       }
-      //console.log("solution is: " + solutionInDeg);
+      console.log("solution is: " + solutionInDeg);
     },
   }
 })
